@@ -2,6 +2,10 @@
 
 Python script that scripts ANSA's meshing API to batch-mesh a camshaft at three element sizes and export ANSYS CDB decks, instead of doing it by hand in the GUI three times.
 
+<img src="Report/images/cadmodel1.jpg" alt="Camshaft CAD model, two lobes on a shaft" width="480">
+
+The part: a two-lobe camshaft on a shaft, imported from STEP.
+
 ## Overview
 
 This came out of an Aerospace Structures EL (RVCE, AS244AI, 2024-25) where the task was to mesh a two-lobe camshaft at 3, 5, and 7 mm and report quality metrics for each. Re-running the same sequence of GUI clicks for every mesh size (and every time the CAD changed) was slow and error-prone, so the workflow got wrapped into a script that drives ANSA's Python API (`ansa.base`, `ansa.mesh`, `ansa.constants`) directly.
@@ -38,6 +42,14 @@ Report/
 images/quality_checks/           raw quality-plot exports (aspect ratio, Jacobian, skewness, warpage) at each mesh size
 ```
 
+## Installation / Usage
+
+This runs inside ANSA's embedded Python interpreter, not a standalone environment. You need ANSA (BETA CAE Systems) installed and licensed, there's no way around that dependency since the script calls `ansa.base` / `ansa.mesh` / `ansa.constants` directly.
+
+1. Open the script in ANSA's script manager, or run it through ANSA's Python console.
+2. Edit the config block at the bottom of `export_working_long_code.py`: `LOGGING_CONFIG` (log path), `PATHS_CONFIG` (STEP input path, output directory), `PROPERTY_CONFIG` (PSHELL/PSOLID IDs, these are model-specific and will need updating for a different geometry), `MESH_CONFIG` (sizing mode, quality thresholds), and `TARGET_MESH_SIZES`.
+3. Run. Each target size gets meshed, quality-checked, exported, and logged in sequence, a failure on one size doesn't stop the others.
+
 ## Results
 
 Batch run on 1 July 2025, single script invocation, three sizes:
@@ -50,21 +62,27 @@ Batch run on 1 July 2025, single script invocation, three sizes:
 
 Quality envelopes stayed inside the NASTRAN/ANSA targets across all three sizes: aspect ratio 1.02-1.85, Jacobian 0.825-1.00 (down to 0.717 on a few high-curvature shell elements at 3 mm), skewness 0.003-0.477, warpage 0.003-0.430, no inverted elements. A later CAM_SHAFT deck used for the report's quality overlay hit 98.9% hexahedra (29,020 hex / 29,352 solids).
 
-<img src="Report/images/cadmodel1.jpg" alt="Camshaft CAD model, two lobes on a shaft" width="420">
+**Mesh density across sizes:**
 
-The camshaft: two cam lobes on a shaft, imported as STEP.
+<img src="Report/images/meshelem-3.jpg" alt="Mapped hex mesh at 3mm" width="270"> <img src="Report/images/meshelem-5.jpg" alt="Mapped hex mesh at 5mm" width="270"> <img src="Report/images/meshelem-7.jpg" alt="Mapped hex mesh at 7mm" width="270">
 
-<img src="Report/images/meshelem-3.jpg" alt="Mapped hex mesh at 3mm" width="420">
+3 mm (64,071 solids), 5 mm (15,356 solids), 7 mm (5,352 solids), left to right. Coarsening is visible mainly on the lobe faces, the shaft stays structured at all three.
 
-Mapped hex mesh at 3 mm — 64,071 solids, 62,309 hex.
+**Jacobian quality, 3 mm vs 7 mm:**
 
-<img src="images/quality_checks/3_jacobian.jpg" alt="Jacobian distribution at 3mm" width="420">
+<img src="images/quality_checks/3_jacobian.jpg" alt="Jacobian distribution at 3mm" width="420"> <img src="images/quality_checks/7_jacobian.jpg" alt="Jacobian distribution at 7mm" width="420">
 
-Jacobian distribution at 3 mm. Most of the volume sits near 1.0.
+Jacobian stays close to 1.0 at both extremes of mesh density, the coarser 7 mm mesh doesn't lose element quality, it just has fewer elements.
 
-<img src="images/quality_checks/7_aspect.jpg" alt="Aspect ratio distribution at 7mm" width="420">
+**Aspect ratio, 5 mm vs 7 mm:**
 
-Aspect ratio at 7 mm — coarser mesh, aspect stays in 1.02-1.65, red confined to a few lobe-face elements.
+<img src="Report/images/elem-5AR%20.jpg" alt="Aspect ratio distribution at 5mm" width="420"> <img src="images/quality_checks/7_aspect.jpg" alt="Aspect ratio distribution at 7mm" width="420">
+
+Aspect ratio stays in 1.02-1.85 across sizes, red (worst-case elements) confined to a handful of high-curvature lobe-face elements, never the bulk of the mesh.
+
+**Warpage, 5 mm vs 7 mm:**
+
+<img src="images/quality_checks/5_warping.jpg" alt="Warpage distribution at 5mm" width="420"> <img src="images/quality_checks/7_warping.jpg" alt="Warpage distribution at 7mm" width="420">
 
 <img src="Report/images/Q-checktable.jpg" alt="ANSA quality check table" width="420">
 
@@ -73,14 +91,6 @@ Quality check table from the report's overlay run: 29,020 hex, 332 penta.
 <img src="Report/images/UML.png" alt="UML diagram of the meshing workflow" width="500">
 
 Suggested class split (`FileManager` / `EntityManager` / `MeshManager`) versus the single `main()` the live script actually uses.
-
-## Usage
-
-This runs inside ANSA's embedded Python interpreter, not a standalone environment — you need ANSA (BETA CAE Systems) installed and licensed.
-
-1. Open the script in ANSA's script manager, or run it through ANSA's Python console.
-2. Edit the config block at the bottom of `export_working_long_code.py`: `LOGGING_CONFIG` (log path), `PATHS_CONFIG` (STEP input path, output directory), `PROPERTY_CONFIG` (PSHELL/PSOLID IDs — these are model-specific and will need updating for a different geometry), `MESH_CONFIG` (sizing mode, quality thresholds), and `TARGET_MESH_SIZES`.
-3. Run. Each target size gets meshed, quality-checked, exported, and logged in sequence; a failure on one size doesn't stop the others.
 
 ## Limitations
 
