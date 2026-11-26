@@ -302,10 +302,15 @@ if __name__ == '__main__':
     # ====================================================================
     # CONFIGURATION SECTION - ALL USER-DEFINABLE PARAMETERS
     # ====================================================================
+
+    # Keep the default paths next to this script so the project works from
+    # any checkout location. Users can still override them in the config below.
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
     
     # LOGGING CONFIGURATION
     LOGGING_CONFIG = {
-        'log_file_path': r"C:\Users\kvsha\Documents\EL\4TH SEM\Structures Lab\ansa_mesh_log.txt",
+        'log_file_path': os.path.join(OUTPUT_DIR, "ansa_mesh_log.txt"),
         'file_mode': 'w',  # 'w' = overwrite, 'a' = append
         'log_level': 'INFO',  # DEBUG, INFO, WARNING, ERROR, CRITICAL
         'log_format': '%(asctime)s - %(levelname)s - %(message)s'
@@ -314,10 +319,10 @@ if __name__ == '__main__':
     # INPUT/OUTPUT PATHS CONFIGURATION
     PATHS_CONFIG = {
         'input_paths': {
-            'step_file': r"C:\Users\kvsha\Downloads\A\A\CAM_SHAFT.STEP"
+            'step_file': os.path.join(SCRIPT_DIR, "CAM_SHAFT.STEP")
         },
         'output_paths': {
-            'output_directory': r"C:\Users\kvsha\Documents\EL\4TH SEM\Structures Lab",
+            'output_directory': OUTPUT_DIR,
             'filename_prefix': "meshsize",
             'file_extension': ".cdb"
         }
@@ -376,6 +381,10 @@ if __name__ == '__main__':
     }
     
     # Initialize logging system
+    os.makedirs(PATHS_CONFIG['output_paths']['output_directory'], exist_ok=True)
+    log_directory = os.path.dirname(LOGGING_CONFIG['log_file_path'])
+    if log_directory:
+        os.makedirs(log_directory, exist_ok=True)
     setup_logging(LOGGING_CONFIG)
     
     # Initialize comprehensive logging for the entire script execution

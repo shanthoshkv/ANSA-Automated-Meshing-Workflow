@@ -56,7 +56,7 @@ images/quality_checks/           raw quality-plot exports (aspect ratio, Jacobia
 This runs inside ANSA's embedded Python interpreter, not a standalone environment. You need ANSA (BETA CAE Systems) installed and licensed, there's no way around that dependency since the script calls `ansa.base` / `ansa.mesh` / `ansa.constants` directly.
 
 1. Open the script in ANSA's script manager, or run it through ANSA's Python console.
-2. Edit the config block at the bottom of `export_working_long_code.py`: `LOGGING_CONFIG` (log path), `PATHS_CONFIG` (STEP input path, output directory), `PROPERTY_CONFIG` (PSHELL/PSOLID IDs, these are model-specific and will need updating for a different geometry), `MESH_CONFIG` (sizing mode, quality thresholds), and `TARGET_MESH_SIZES`.
+2. By default, the script looks for `CAM_SHAFT.STEP` beside `export_working_long_code.py` and writes its log and CDB output files to an `output/` folder beside the script (the folder is created automatically). To use different locations, edit `LOGGING_CONFIG` (log path) and `PATHS_CONFIG` (STEP input path, output directory) in the config block at the bottom of the script. You can also edit `PROPERTY_CONFIG` (PSHELL/PSOLID IDs, which are model-specific and may need updating for different geometry), `MESH_CONFIG` (sizing mode, quality thresholds), and `TARGET_MESH_SIZES`.
 3. Run. Each target size gets meshed, quality-checked, exported, and logged in sequence, a failure on one size doesn't stop the others.
 
 ## Results
